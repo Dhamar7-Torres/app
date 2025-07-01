@@ -1,20 +1,13 @@
-import { useState } from "react";
+import React from "react";
 
+// Componente principal de la aplicación
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <main className="flex flex-col items-center gap-8 py-16 max-w-[1280px] mx-auto">
-      <h1 className="text-4xl font-bold">Hello React & Tailwind!</h1>
-      <div className="flex flex-row items-center gap-6">
-        <button
-          className="bg-sky-300 px-3 py-2 rounded hover:bg-sky-400"
-          onClick={() => setCount(count + 1)}
-        >
-          Count: {count}
-        </button>
-      </div>
-    </main>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <h1 className="text-3xl font-bold text-blue-600">
+        🐄 Bovino Manager - React App
+      </h1>
+    </div>
   );
 }
 
