@@ -3,11 +3,11 @@ import React, { createContext, useContext, useReducer, ReactNode } from "react";
 // Tipos para el estado global de la aplicación
 interface AppState {
   isLoading: boolean;
-  error: string | null;
   notifications: Notification[];
-  theme: "light" | "dark";
-  language: "es" | "en";
   currentView: "dashboard" | "map" | "calendar" | "bovines" | "reports";
+  sidebarOpen: boolean;
+  language: "es" | "en";
+  theme: "light" | "dark";
 }
 
 interface Notification {
@@ -16,58 +16,50 @@ interface Notification {
   title: string;
   message: string;
   timestamp: Date;
-  duration?: number;
+  read: boolean;
 }
 
-// Acciones disponibles para el reducer
+// Tipos de acciones para el reducer
 type AppAction =
   | { type: "SET_LOADING"; payload: boolean }
-  | { type: "SET_ERROR"; payload: string | null }
   | {
       type: "ADD_NOTIFICATION";
-      payload: Omit<Notification, "id" | "timestamp">;
+      payload: Omit<Notification, "id" | "timestamp" | "read">;
     }
   | { type: "REMOVE_NOTIFICATION"; payload: string }
-  | { type: "CLEAR_NOTIFICATIONS" }
-  | { type: "SET_THEME"; payload: "light" | "dark" }
-  | { type: "SET_LANGUAGE"; payload: "es" | "en" }
-  | { type: "SET_CURRENT_VIEW"; payload: AppState["currentView"] };
+  | { type: "MARK_NOTIFICATION_READ"; payload: string }
+  | { type: "SET_CURRENT_VIEW"; payload: AppState["currentView"] }
+  | { type: "TOGGLE_SIDEBAR" }
+  | { type: "SET_LANGUAGE"; payload: AppState["language"] }
+  | { type: "SET_THEME"; payload: AppState["theme"] }
+  | { type: "CLEAR_ALL_NOTIFICATIONS" };
 
 // Estado inicial de la aplicación
 const initialState: AppState = {
   isLoading: false,
-  error: null,
   notifications: [],
-  theme: "light",
-  language: "es",
   currentView: "dashboard",
+  sidebarOpen: true,
+  language: "es",
+  theme: "light",
 };
 
 // Reducer para manejar las acciones del estado global
 const appReducer = (state: AppState, action: AppAction): AppState => {
   switch (action.type) {
     case "SET_LOADING":
-      return {
-        ...state,
-        isLoading: action.payload,
-      };
-
-    case "SET_ERROR":
-      return {
-        ...state,
-        error: action.payload,
-        isLoading: false,
-      };
+      return { ...state, isLoading: action.payload };
 
     case "ADD_NOTIFICATION":
       const newNotification: Notification = {
         ...action.payload,
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date(),
+        read: false,
       };
       return {
         ...state,
-        notifications: [newNotification, ...state.notifications].slice(0, 5), // Máximo 5 notificaciones
+        notifications: [newNotification, ...state.notifications],
       };
 
     case "REMOVE_NOTIFICATION":
@@ -78,29 +70,28 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         ),
       };
 
-    case "CLEAR_NOTIFICATIONS":
+    case "MARK_NOTIFICATION_READ":
       return {
         ...state,
-        notifications: [],
-      };
-
-    case "SET_THEME":
-      return {
-        ...state,
-        theme: action.payload,
-      };
-
-    case "SET_LANGUAGE":
-      return {
-        ...state,
-        language: action.payload,
+        notifications: state.notifications.map((n) =>
+          n.id === action.payload ? { ...n, read: true } : n
+        ),
       };
 
     case "SET_CURRENT_VIEW":
-      return {
-        ...state,
-        currentView: action.payload,
-      };
+      return { ...state, currentView: action.payload };
+
+    case "TOGGLE_SIDEBAR":
+      return { ...state, sidebarOpen: !state.sidebarOpen };
+
+    case "SET_LANGUAGE":
+      return { ...state, language: action.payload };
+
+    case "SET_THEME":
+      return { ...state, theme: action.payload };
+
+    case "CLEAR_ALL_NOTIFICATIONS":
+      return { ...state, notifications: [] };
 
     default:
       return state;
@@ -111,22 +102,23 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
 interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
-  // Funciones helper para acciones comunes
+  // Funciones auxiliares para acciones comunes
   setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
   addNotification: (
-    notification: Omit<Notification, "id" | "timestamp">
+    notification: Omit<Notification, "id" | "timestamp" | "read">
   ) => void;
   removeNotification: (id: string) => void;
-  clearNotifications: () => void;
-  toggleTheme: () => void;
-  setLanguage: (language: "es" | "en") => void;
+  markNotificationRead: (id: string) => void;
   setCurrentView: (view: AppState["currentView"]) => void;
+  toggleSidebar: () => void;
+  setLanguage: (language: AppState["language"]) => void;
+  setTheme: (theme: AppState["theme"]) => void;
+  clearAllNotifications: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Provider del contexto de la aplicación
+// Proveedor del contexto de aplicación
 interface AppProviderProps {
   children: ReactNode;
 }
@@ -134,17 +126,13 @@ interface AppProviderProps {
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Funciones helper para facilitar el uso del contexto
+  // Funciones auxiliares para simplificar el uso del contexto
   const setLoading = (loading: boolean) => {
     dispatch({ type: "SET_LOADING", payload: loading });
   };
 
-  const setError = (error: string | null) => {
-    dispatch({ type: "SET_ERROR", payload: error });
-  };
-
   const addNotification = (
-    notification: Omit<Notification, "id" | "timestamp">
+    notification: Omit<Notification, "id" | "timestamp" | "read">
   ) => {
     dispatch({ type: "ADD_NOTIFICATION", payload: notification });
   };
@@ -153,75 +141,54 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     dispatch({ type: "REMOVE_NOTIFICATION", payload: id });
   };
 
-  const clearNotifications = () => {
-    dispatch({ type: "CLEAR_NOTIFICATIONS" });
-  };
-
-  const toggleTheme = () => {
-    dispatch({
-      type: "SET_THEME",
-      payload: state.theme === "light" ? "dark" : "light",
-    });
-  };
-
-  const setLanguage = (language: "es" | "en") => {
-    dispatch({ type: "SET_LANGUAGE", payload: language });
+  const markNotificationRead = (id: string) => {
+    dispatch({ type: "MARK_NOTIFICATION_READ", payload: id });
   };
 
   const setCurrentView = (view: AppState["currentView"]) => {
     dispatch({ type: "SET_CURRENT_VIEW", payload: view });
   };
 
-  // Valor del contexto que se proporcionará a los componentes hijos
-  const contextValue: AppContextType = {
+  const toggleSidebar = () => {
+    dispatch({ type: "TOGGLE_SIDEBAR" });
+  };
+
+  const setLanguage = (language: AppState["language"]) => {
+    dispatch({ type: "SET_LANGUAGE", payload: language });
+  };
+
+  const setTheme = (theme: AppState["theme"]) => {
+    dispatch({ type: "SET_THEME", payload: theme });
+  };
+
+  const clearAllNotifications = () => {
+    dispatch({ type: "CLEAR_ALL_NOTIFICATIONS" });
+  };
+
+  const value: AppContextType = {
     state,
     dispatch,
     setLoading,
-    setError,
     addNotification,
     removeNotification,
-    clearNotifications,
-    toggleTheme,
-    setLanguage,
+    markNotificationRead,
     setCurrentView,
+    toggleSidebar,
+    setLanguage,
+    setTheme,
+    clearAllNotifications,
   };
 
-  return (
-    <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-// Hook personalizado para usar el contexto de la aplicación
+// Hook personalizado para usar el contexto de aplicación
 export const useApp = (): AppContextType => {
   const context = useContext(AppContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useApp must be used within an AppProvider");
   }
   return context;
 };
 
-// Hook para notificaciones con auto-eliminación
-export const useNotifications = () => {
-  const { state, addNotification, removeNotification } = useApp();
-
-  const showNotification = (
-    notification: Omit<Notification, "id" | "timestamp">
-  ) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    addNotification({
-      ...notification,
-      duration: notification.duration || 5000,
-    });
-
-    // Auto-eliminar la notificación después del tiempo especificado
-    setTimeout(() => {
-      removeNotification(id);
-    }, notification.duration || 5000);
-  };
-
-  return {
-    notifications: state.notifications,
-    showNotification,
-    removeNotification,
-  };
-};
+export default AppContext;
