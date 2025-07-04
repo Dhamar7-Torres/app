@@ -28,9 +28,9 @@ const Footer: React.FC<FooterProps> = ({
 }) => {
   // Información de contacto
   const contactInfo = {
-    email: "soporte@bovinecare.com",
+    email: "soporte@Bovino_Ujat.com",
     phone: "+52 (442) 123-4567",
-    address: "Querétaro, México",
+    address: "Tabasco, México",
   };
 
   // Enlaces útiles
@@ -101,14 +101,14 @@ const Footer: React.FC<FooterProps> = ({
               <Beef className="text-white" size={16} />
             </div>
             <div>
-              <span className="font-bold text-gray-900">BovineCare</span>
+              <span className="font-bold text-gray-900">Bovino_Ujat</span>
               <span className="text-sm text-gray-500 ml-2">v1.0.0</span>
             </div>
           </div>
 
           {/* Copyright y enlaces */}
           <div className="flex items-center gap-4 text-sm text-gray-500">
-            <span>© 2025 BovineCare</span>
+            <span>© 2025 Bovino_Ujat</span>
             <span>•</span>
             <a
               href="/privacy"
@@ -147,7 +147,7 @@ const Footer: React.FC<FooterProps> = ({
                 <Beef className="text-white" size={20} />
               </div>
               <div>
-                <h3 className="font-bold text-xl text-gray-900">BovineCare</h3>
+                <h3 className="font-bold text-xl text-gray-900">Bovino_Ujat</h3>
                 <p className="text-sm text-gray-600">
                   Gestión Ganadera Inteligente
                 </p>
@@ -297,7 +297,7 @@ const Footer: React.FC<FooterProps> = ({
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Copyright y versión */}
             <div className="flex items-center gap-4 text-sm text-gray-600">
-              <span>© 2025 BovineCare. Todos los derechos reservados.</span>
+              <span>© 2025 Bovino_Ujat. Todos los derechos reservados.</span>
               <span className="hidden md:inline">•</span>
               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                 Versión 1.0.0
@@ -355,7 +355,7 @@ const Footer: React.FC<FooterProps> = ({
             <div className="flex items-center justify-center gap-2 mt-2">
               <MapPin size={12} className="text-gray-400" />
               <span className="text-xs text-gray-400">
-                Orgullosamente desarrollado en Querétaro, México
+                Orgullosamente desarrollado en Tabasco, México
               </span>
             </div>
           </div>
